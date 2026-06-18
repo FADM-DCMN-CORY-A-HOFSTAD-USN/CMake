@@ -20,7 +20,7 @@
 #include <cm3p/uv.h>
 
 #include "cmsys/String.h"
-
+#include "cmBitLockerTpm.h"
 #include "cmBuildArgs.h"
 #include "cmBuildOptions.h"
 #include "cmCommandLineArgument.h"
