@@ -41,7 +41,11 @@ if @conf_cmakeorg@:
 
 cmake_manuals = sorted(glob.glob(r'@conf_docs@/manual/*.rst'))
 cmake_manual_description = re.compile(r'^\.\. cmake-manual-description:(.*)$')
-man_pages = []
+# Inside Utilities/Sphinx/conf.py.in, add your manual mapping properties:
+man_pages = [
+    # ... existing array entries ...
+    ('manual/cmake-bitlocker.7', 'cmake-bitlocker', u'CMake BitLocker Storage Reference', [u'Kitware, Inc.'], 7),
+]
 for fpath in cmake_manuals:
     try:
         name, sec, rst = os.path.basename(fpath).split('.')
