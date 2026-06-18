@@ -1125,6 +1125,45 @@ int main(int ac, char const* const* av)
     cmsys::Encoding::CommandLineArguments::Main(ac, av);
   ac = args.argc();
   av = args.argv();
+// Look for the argument parsing loop in cmakemain.cxx and insert this:
+if (std::string(argv[i]) == "--bitlocker-unlock") {
+  if (i + 2 >= argc) {
+    std::cerr << "Error: --bitlocker-unlock requires <device_path> and <mount_point>.\n"
+              << "Usage: cmake --bitlocker-unlock /dev/sdb1 /mnt/target [--strategy=auto|sealed|nv] [--blob=<path>] [--index=<hex>]\n";
+    return 1;
+  }
+
+  std::string devicePath = argv[++i];
+  std::string mountPoint = argv[++i];
+  
+  // Default values
+  TpmKeyStrategy strategy = TpmKeyStrategy::Auto;
+  std::string blobPath = "";
+  uint32_t nvIndex = 0x1500001;
+
+  // Parse optional sub-arguments if they exist
+  while (i + 1 < argc && std::string(argv[i+1]).rfind("--", 0) == 0) {
+    std::string opt = argv[++i];
+    if (opt.rfind("--strategy=", 0) == 0) {
+      std::string stratStr = opt.substr(11);
+      if (stratStr == "sealed") strategy = TpmKeyStrategy::SealedBlob;
+      else if (stratStr == "nv") strategy = TpmKeyStrategy::NvIndex;
+      else strategy = TpmKeyStrategy::Auto;
+    } 
+    else if (opt.rfind("--blob=", 0) == 0) {
+      blobPath = opt.substr(7);
+    } 
+    else if (opt.rfind("--index=", 0) == 0) {
+      nvIndex = std::stoul(opt.substr(8), nullptr, 16);
+    }
+  }
+
+  // Execute the structural extraction and decryption engine
+  std::cout << "Starting BitLocker TPM verification pipeline...\n";
+  bool success = cmBitLockerTpm::UnlockDrive(devicePath, mountPoint, strategy, blobPath, nvIndex);
+  
+  return success ? 0 : 1;
+}
 
   cmSystemTools::InitializeLibUV();
   cmSystemTools::FindCMakeResources(av[0]);
